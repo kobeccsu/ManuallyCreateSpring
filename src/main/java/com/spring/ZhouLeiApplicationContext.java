@@ -63,7 +63,7 @@ public class ZhouLeiApplicationContext {
                 Object o = singletonObjects.get(baenName);
                 return o;
             }else{
-                
+
             }
         }else{
             throw new IllegalArgumentException("not found bean");

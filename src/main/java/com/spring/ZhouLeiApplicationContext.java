@@ -2,9 +2,11 @@ package com.spring;
 
 import java.io.File;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Currency;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ZhouLeiApplicationContext {
@@ -15,6 +17,21 @@ public class ZhouLeiApplicationContext {
     public ZhouLeiApplicationContext(Class appConfig) throws ClassNotFoundException {
         this.appConfig = appConfig;
 
+        scan(appConfig);
+
+        for (Map.Entry<String, BeanDefinition> entry : beanDefinitionMap.entrySet()) {
+            String beanName = entry.getKey();
+            BeanDefinition beanDefinition = entry.getValue();
+
+            if (beanDefinition.getScope().equals("singleton")){
+                Object bean = createBean(beanDefinition);
+                singletonObjects.put(beanName, bean);
+            }
+        }
+
+    }
+
+    private void scan(Class appConfig) throws ClassNotFoundException {
         ComponentScan componentScanAnnotation = (ComponentScan) appConfig.getDeclaredAnnotation(ComponentScan.class);
         String path = componentScanAnnotation.value();
         System.out.println(path);
@@ -39,12 +56,16 @@ public class ZhouLeiApplicationContext {
                     String bean = declaredAnnotation.value();
 
                     BeanDefinition beanDefinition = new BeanDefinition();
+
+                    beanDefinition.setAclass(aClass);
+
                     if (aClass.isAnnotationPresent(Scope.class)) {
                         Scope scopeAnnotation = aClass.getDeclaredAnnotation(Scope.class);
                         beanDefinition.setScope(scopeAnnotation.value());
                     } else {
                         beanDefinition.setScope("singleton");
                     }
+
                     beanDefinitionMap.put(bean, beanDefinition);
                 }
             }
@@ -52,22 +73,38 @@ public class ZhouLeiApplicationContext {
         } else {
 
         }
-
     }
 
-    public Object getBean(String baenName) {
-        if (beanDefinitionMap.contains(baenName)) {
-            BeanDefinition beanDefinition = beanDefinitionMap.get(baenName);
+    public Object getBean(String beanName) {
+        if (beanDefinitionMap.containsKey(beanName)) {
+            BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
 
             if (beanDefinition.getScope().equals("singleton")) {
-                Object o = singletonObjects.get(baenName);
+                Object o = singletonObjects.get(beanName);
                 return o;
             } else {
-
+                Object bean = createBean(beanDefinition);
+                return bean;
             }
         } else {
             throw new IllegalArgumentException("not found bean");
         }
+    }
+
+    public Object createBean(BeanDefinition beanDefinition){
+        try {
+            Object instance = beanDefinition.getClass().getDeclaredConstructor().newInstance();
+            return instance;
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+
         return null;
     }
 }

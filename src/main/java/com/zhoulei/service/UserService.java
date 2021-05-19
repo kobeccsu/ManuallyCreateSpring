@@ -4,6 +4,6 @@ import com.spring.Component;
 import com.spring.Scope;
 
 @Component("userService")
-@Scope("protoptye")
+//@Scope("protoptye")
 public class UserService {
 }

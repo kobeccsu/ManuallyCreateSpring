@@ -6,7 +6,8 @@ public class Test {
     public static void main(String[] args) throws ClassNotFoundException {
         ZhouLeiApplicationContext zhouLeiApplicationContext = new ZhouLeiApplicationContext(AppConfig.class);
 
-        Object userService = zhouLeiApplicationContext.getBean("userService");
-
+        System.out.println(zhouLeiApplicationContext.getBean("userService"));
+        System.out.println(zhouLeiApplicationContext.getBean("userService"));
+        System.out.println(zhouLeiApplicationContext.getBean("userService"));
     }
 }

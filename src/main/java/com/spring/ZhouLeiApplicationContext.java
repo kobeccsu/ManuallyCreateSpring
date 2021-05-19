@@ -23,7 +23,7 @@ public class ZhouLeiApplicationContext {
         URL resource = classLoader.getResource("com/zhoulei/service");
 
 
-        File file = new File(resource.getFile()) ;
+        File file = new File(resource.getFile());
         if (file.isDirectory()) {
             File[] files = file.listFiles();
             for (File file1 : files) {
@@ -42,30 +42,30 @@ public class ZhouLeiApplicationContext {
                     if (aClass.isAnnotationPresent(Scope.class)) {
                         Scope scopeAnnotation = aClass.getDeclaredAnnotation(Scope.class);
                         beanDefinition.setScope(scopeAnnotation.value());
-                    }else{
+                    } else {
                         beanDefinition.setScope("singleton");
                     }
                     beanDefinitionMap.put(bean, beanDefinition);
                 }
             }
 
-        }else{
+        } else {
 
         }
 
     }
 
-    public Object getBean(String baenName){
+    public Object getBean(String baenName) {
         if (beanDefinitionMap.contains(baenName)) {
             BeanDefinition beanDefinition = beanDefinitionMap.get(baenName);
 
-            if (beanDefinition.getScope().equals("singleton")){
+            if (beanDefinition.getScope().equals("singleton")) {
                 Object o = singletonObjects.get(baenName);
                 return o;
-            }else{
+            } else {
 
             }
-        }else{
+        } else {
             throw new IllegalArgumentException("not found bean");
         }
         return null;

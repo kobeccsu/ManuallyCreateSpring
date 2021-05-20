@@ -13,12 +13,20 @@ public class UserService implements InitializingBean {
 
     public void test(){
         System.out.println(orderService);
-        System.out.println("BeanName :" + beanName);
+        System.out.println("BeanName :" + getBeanName());
     }
 
 
     @Override
     public void afterPropertiesSet() throws Exception {
         System.out.println("Hello");
+    }
+
+    public String getBeanName() {
+        return beanName;
+    }
+
+    public void setBeanName(String beanName) {
+        this.beanName = beanName;
     }
 }

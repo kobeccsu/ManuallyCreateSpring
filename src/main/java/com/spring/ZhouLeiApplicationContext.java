@@ -5,17 +5,16 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
-import java.util.Currency;
-import java.util.Enumeration;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ZhouLeiApplicationContext {
     private Class appConfig;
     private ConcurrentHashMap<String, Object> singletonObjects = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>();
+    private List<BeanPostProcessor> beanPostProcessorList = new ArrayList<>();
 
-    public ZhouLeiApplicationContext(Class appConfig) throws ClassNotFoundException {
+    public ZhouLeiApplicationContext(Class appConfig) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         this.appConfig = appConfig;
 
         scan(appConfig);
@@ -32,7 +31,7 @@ public class ZhouLeiApplicationContext {
 
     }
 
-    private void scan(Class appConfig) throws ClassNotFoundException {
+    private void scan(Class appConfig) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
         ComponentScan componentScanAnnotation = (ComponentScan) appConfig.getDeclaredAnnotation(ComponentScan.class);
         String path = componentScanAnnotation.value();
         System.out.println(path);
@@ -52,7 +51,14 @@ public class ZhouLeiApplicationContext {
                 packageWithSlash = packageWithSlash.replace("\\", ".");
                 System.out.println(packageWithSlash);
                 Class<?> aClass = classLoader.loadClass(packageWithSlash);
+
                 if (aClass.isAnnotationPresent(Component.class)) {
+
+                    if (BeanPostProcessor.class.isAssignableFrom(aClass)){
+                        BeanPostProcessor beanPostProcessor = (BeanPostProcessor) aClass.getDeclaredConstructor().newInstance();
+                        beanPostProcessorList.add(beanPostProcessor);
+                    }
+
                     Component declaredAnnotation = aClass.getDeclaredAnnotation(Component.class);
                     String bean = declaredAnnotation.value();
 
@@ -100,10 +106,18 @@ public class ZhouLeiApplicationContext {
             if (instance instanceof BeanNameAware){
                 ((BeanNameAware)instance).SetBeanName(beanName);
             }
+
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
+                instance = beanPostProcessor.postProcessBeforeInitialization(instance, beanName);
+            }
+
             if (instance instanceof InitializingBean){
                 ((InitializingBean)instance).afterPropertiesSet();
             }
 
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
+                instance = beanPostProcessor.postProcessAfterInitialization(instance, beanName);
+            }
 
             for (Field declaredField : aclass.getDeclaredFields()) {
                 if (declaredField.isAnnotationPresent(AutoWired.class)){

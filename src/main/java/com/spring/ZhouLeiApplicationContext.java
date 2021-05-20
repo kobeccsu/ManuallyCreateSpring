@@ -2,6 +2,7 @@ package com.spring;
 
 import java.io.File;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Currency;
@@ -24,7 +25,7 @@ public class ZhouLeiApplicationContext {
             BeanDefinition beanDefinition = entry.getValue();
 
             if (beanDefinition.getScope().equals("singleton")){
-                Object bean = createBean(beanDefinition);
+                Object bean = createBean(beanName, beanDefinition);
                 singletonObjects.put(beanName, bean);
             }
         }
@@ -83,7 +84,7 @@ public class ZhouLeiApplicationContext {
                 Object o = singletonObjects.get(beanName);
                 return o;
             } else {
-                Object bean = createBean(beanDefinition);
+                Object bean = createBean(beanName,beanDefinition);
                 return bean;
             }
         } else {
@@ -91,9 +92,26 @@ public class ZhouLeiApplicationContext {
         }
     }
 
-    public Object createBean(BeanDefinition beanDefinition){
+    public Object createBean(String beanName, BeanDefinition beanDefinition){
+        Class aclass = beanDefinition.getAclass();
         try {
-            Object instance = beanDefinition.getClass().getDeclaredConstructor().newInstance();
+            Object instance = aclass.getDeclaredConstructor().newInstance();
+
+            if (instance instanceof BeanNameAware){
+                ((BeanNameAware)instance).SetBeanName(beanName);
+            }
+            if (instance instanceof InitializingBean){
+                ((InitializingBean)instance).afterPropertiesSet();
+            }
+
+
+            for (Field declaredField : aclass.getDeclaredFields()) {
+                if (declaredField.isAnnotationPresent(AutoWired.class)){
+                    Object bean = getBean(declaredField.getName());
+                    declaredField.setAccessible(true);
+                    declaredField.set(instance, bean);
+                }
+            }
             return instance;
         } catch (InstantiationException e) {
             e.printStackTrace();
@@ -102,6 +120,8 @@ public class ZhouLeiApplicationContext {
         } catch (InvocationTargetException e) {
             e.printStackTrace();
         } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

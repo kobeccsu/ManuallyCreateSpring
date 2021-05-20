@@ -103,6 +103,14 @@ public class ZhouLeiApplicationContext {
         try {
             Object instance = aclass.getDeclaredConstructor().newInstance();
 
+            for (Field declaredField : aclass.getDeclaredFields()) {
+                if (declaredField.isAnnotationPresent(AutoWired.class)){
+                    Object bean = getBean(declaredField.getName());
+                    declaredField.setAccessible(true);
+                    declaredField.set(instance, bean);
+                }
+            }
+
             if (instance instanceof BeanNameAware){
                 ((BeanNameAware)instance).SetBeanName(beanName);
             }
@@ -119,13 +127,7 @@ public class ZhouLeiApplicationContext {
                 instance = beanPostProcessor.postProcessAfterInitialization(instance, beanName);
             }
 
-            for (Field declaredField : aclass.getDeclaredFields()) {
-                if (declaredField.isAnnotationPresent(AutoWired.class)){
-                    Object bean = getBean(declaredField.getName());
-                    declaredField.setAccessible(true);
-                    declaredField.set(instance, bean);
-                }
-            }
+
             return instance;
         } catch (InstantiationException e) {
             e.printStackTrace();

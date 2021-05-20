@@ -2,6 +2,7 @@ package com.zhoulei;
 
 import com.spring.ZhouLeiApplicationContext;
 import com.zhoulei.service.UserService;
+import com.zhoulei.service.UserServiceImpl;
 
 import java.lang.reflect.InvocationTargetException;
 

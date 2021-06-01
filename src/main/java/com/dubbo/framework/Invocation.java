@@ -23,5 +23,6 @@ public class Invocation implements Serializable {
     }
 
     public Object getParams() {
+        return null;
     }
 }
